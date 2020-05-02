@@ -36,6 +36,18 @@
     <ClInclude Include="MsgDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="TabMain.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TabFile.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TabHistroy.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="TabText.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GrobHook.cpp">
@@ -48,6 +60,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MsgDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TabMain.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TabFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TabHistroy.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="TabText.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

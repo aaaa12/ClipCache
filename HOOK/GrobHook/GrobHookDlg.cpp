@@ -13,6 +13,7 @@
 #include<vector>
 #include<fstream>
 #include<iterator>
+#include "TabMain.h"
 #include "KMHookDll.h"
 using namespace std;
 #ifdef _DEBUG
@@ -49,6 +50,7 @@ BEGIN_MESSAGE_MAP(CGrobHookDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RECORD, &CGrobHookDlg::OnBnClickedRecord)
 	ON_BN_CLICKED(IDC_BUTTON3, &CGrobHookDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &CGrobHookDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BTN_TABTEST, &CGrobHookDlg::OnBnClickedBtnTabtest)
 END_MESSAGE_MAP()
 
 
@@ -890,4 +892,12 @@ void CGrobHookDlg::OnBnClickedButton4()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	CKMHookDll::GetInstance()->RunScript();
+}
+
+
+void CGrobHookDlg::OnBnClickedBtnTabtest()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	TabMain tab;
+	tab.DoModal();
 }

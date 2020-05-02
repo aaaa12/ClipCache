@@ -201,6 +201,10 @@
     <ClInclude Include="MsgDlg.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="TabFile.h" />
+    <ClInclude Include="TabHistroy.h" />
+    <ClInclude Include="TabMain.h" />
+    <ClInclude Include="TabText.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -213,6 +217,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="TabFile.cpp" />
+    <ClCompile Include="TabHistroy.cpp" />
+    <ClCompile Include="TabMain.cpp" />
+    <ClCompile Include="TabText.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GrobHook.rc" />
