@@ -230,6 +230,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\GrobHook.ico" />
+    <Image Include="res\icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

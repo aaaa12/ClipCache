@@ -27,10 +27,13 @@ private:
 	TabHistroy m_tabHist;
 	TabFile m_tabFile;
 	TabText m_tabText;
+	void SetCtlRect();
+	bool bResize=false;
 public:
 	virtual BOOL OnInitDialog();
 private:
 	CTabCtrl m_tab;
 public:
 	afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 };
