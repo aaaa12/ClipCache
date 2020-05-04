@@ -33,27 +33,30 @@ BEGIN_MESSAGE_MAP(TabFile, CDialogEx)
 	ON_NOTIFY(TVN_ITEMEXPANDED, IDC_TREE, &TabFile::OnItemexpandedTree)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TREE, &TabFile::OnSelchangedTree)
 	ON_WM_SIZE()
+	ON_BN_CLICKED(IDC_BTN_TOCLIP, &TabFile::OnBnClickedBtnToclip)
 END_MESSAGE_MAP()
 
 
 // TabFile 消息处理程序
-void TabFile::ExpendPath(HTREEITEM hItem,const vector<CString> &vPath, int p)
+void TabFile::ExpendPath(HTREEITEM hItem, const vector<CString> &vPath, int p)
 {
 	if (vPath.size() <= p)
 		return;
 
 	while (hItem)
 	{
-		MessageBox(m_tree.GetItemText(hItem));
 		if (m_tree.GetItemText(hItem) == vPath[p])
 		{
 			m_tree.Expand(hItem, TVE_EXPAND);
 			HTREEITEM hChildItem = m_tree.GetNextItem(hItem, TVGN_CHILD);
+
+
+
 			ExpendPath(hChildItem, vPath, p + 1);
 		}
 
-		hItem=m_tree.GetNextItem(hItem, TVGN_NEXT);
-		
+		hItem = m_tree.GetNextItem(hItem, TVGN_NEXT);
+
 	}
 }
 
@@ -73,9 +76,10 @@ BOOL TabFile::OnInitDialog()
 	m_tree.Expand(m_hRoot, TVE_EXPAND);               //展开或折叠子项列表 TVE_EXPAND展开列表  
 
 	vector<CString> v;
-	v.push_back("C:\\");
+	v.push_back("D:");
+	v.push_back("EFS");
 	HTREEITEM hChildItem = m_tree.GetNextItem(m_hRoot, TVGN_CHILD);
-	ExpendPath(hChildItem,v,0);
+	ExpendPath(hChildItem, v, 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
@@ -92,10 +96,15 @@ void TabFile::GetLogicalDrives(HTREEITEM hParent)
 	size_t szDriveString = strlen(pDriveStrings);                        //驱动大小
 	while (szDriveString > 0)
 	{
-		m_tree.InsertItem(pDriveStrings, hParent);       //在父节点hParent添加盘符
+		CString sItem = pDriveStrings;//去掉'\'
+		sItem = sItem.Left(2);
+		m_tree.InsertItem(sItem, hParent);       //在父节点hParent添加盘符
 		pDriveStrings += szDriveString + 1;             //pDriveStrings即C:\ D:\ E:\盘
 		szDriveString = strlen(pDriveStrings);
 	}
+
+	//free(pDriveStrings);//位置已经偏移，所以free比较麻烦，算了
+
 }
 
 //函数功能:获取驱动盘符下所有子项文件夹
@@ -209,6 +218,9 @@ void TabFile::OnSelchangedTree(NMHDR *pNMHDR, LRESULT *pResult)
 			m_list.InsertItem(i, info.szDisplayName, i);
 		}
 	}
+
+	SetPathCtl();
+
 	*pResult = 0;
 }
 
@@ -218,26 +230,145 @@ void TabFile::OnSize(UINT nType, int cx, int cy)
 	CDialogEx::OnSize(nType, cx, cy);
 
 	// TODO: 在此处添加消息处理程序代码
-	CRect rc,rcLeft,rcRight;
+	CRect rc, rcLeft, rcRight;
 	this->GetClientRect(&rc);
 
 	int midPos = 250;
 
 	//调整子对话框在父窗口中的位置 
 	rcLeft.top = rc.top;
-	rcLeft.bottom = rc.bottom;
+	rcLeft.bottom = rc.bottom - 30;
 	rcLeft.left = rc.left;
-	rcLeft.right = rc.left+ midPos;
+	rcLeft.right = rc.left + midPos;
 
 	rcRight.top = rc.top;
-	rcRight.bottom = rc.bottom;
+	rcRight.bottom = rc.bottom - 30;
 	rcRight.left = rc.left + midPos;
 	rcRight.right = rc.right;
 
 	////设置子对话框尺寸并移动到指定位置 
-	if(m_tree.m_hWnd)
-	  m_tree.MoveWindow(&rcLeft);
+	if (m_tree.m_hWnd)
+		m_tree.MoveWindow(&rcLeft);
 	if (m_list.m_hWnd)
-	  m_list.MoveWindow(&rcRight);
+		m_list.MoveWindow(&rcRight);
 
+}
+
+
+void TabFile::OnBnClickedBtnToclip()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	DirIntoClipBoard(GetPathCtl());
+
+}
+
+void TabFile::SetPathCtl()
+{
+	//MessageBox("11");
+	CString sDir;
+	HTREEITEM hSelectItem = m_tree.GetSelectedItem();
+
+	sDir = m_tree.GetItemText(hSelectItem);
+
+	HTREEITEM hParentItem = m_tree.GetParentItem(hSelectItem);
+	while (hParentItem)
+	{
+		if ("我的电脑" == m_tree.GetItemText(hParentItem))
+			break;
+		sDir = m_tree.GetItemText(hParentItem) + "\\" + sDir;
+		hParentItem = m_tree.GetParentItem(hParentItem);
+	}
+
+	SetDlgItemText(IDC_EDT_PATH, sDir);
+}
+
+CString TabFile::GetPathCtl()
+{
+	CString ret;
+	GetDlgItemText(IDC_EDT_PATH, ret);
+	return ret;
+}
+
+void TabFile::DirIntoClipBoard(CString sDir)
+{
+	//要复制剪切的文档或者文件夹
+	char *lpBuffer = sDir.GetBuffer();
+	UINT uBufLen = strlen(lpBuffer);
+
+	//true拷贝，false剪切
+	bool bCopy = true;
+
+	UINT uDropEffect = 0;
+	DROPFILES dropFiles = { 0 };
+	UINT uGblLen = 0;
+	UINT uDropFilesLen = 0;
+	HGLOBAL hGblFiles;
+	HGLOBAL hGblEffect;
+	char * szData = NULL;
+	char * szFileList = NULL;
+	DWORD * dwDropEffect = NULL;
+
+	///////////////////////////自定义剪切板，用来设置标识（复制还是剪切）/////////////////////////
+
+	uDropEffect = RegisterClipboardFormat("Preferred DropEffect");    //参数随便填
+
+	hGblEffect = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, sizeof(DWORD));
+	dwDropEffect = (DWORD*)GlobalLock(hGblEffect);
+
+	//设置自定义剪切板的内容为复制或者剪切标识
+	if (bCopy)
+	{
+		*dwDropEffect = DROPEFFECT_COPY;
+	}
+	else
+	{
+		*dwDropEffect = DROPEFFECT_MOVE;
+	}
+
+	GlobalUnlock(hGblEffect);
+
+	///////////////////////////文件剪切板,用来存放文件列表/////////////////////////    
+
+	uDropFilesLen = sizeof(DROPFILES);
+	//DROPFILES结构的大小
+	dropFiles.pFiles = uDropFilesLen;
+	dropFiles.pt.x = 0;
+	dropFiles.pt.y = 0;
+	dropFiles.fNC = FALSE;
+	//true: UNICODE, false: ascii
+	dropFiles.fWide = TRUE;
+
+	//uBufLen * 2表示的是宽字符大小， 加8表示文件末尾需要2个空指针结尾，每个指针占4个字节大小
+	uGblLen = uDropFilesLen + uBufLen * 2 + 8;
+	hGblFiles = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, uGblLen);
+
+	szData = (char *)GlobalLock(hGblFiles);
+
+	//把DROPFILES结构大小的内容放到szData剪切板空间的最开始
+	memcpy(szData, (LPVOID)(&dropFiles), uDropFilesLen);
+
+
+
+	//szFileList指向需要放入文件的那个空间，前面存放了DROPFILES结构大小的空间
+	szFileList = szData + uDropFilesLen;
+
+	//把文件列表转为宽字符，并存放到szFileList指向的那片空间
+	MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
+		lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
+	CString str = szFileList;
+	GlobalUnlock(hGblFiles);
+
+	if (::OpenClipboard(NULL))
+	{
+		EmptyClipboard();
+
+		//可以设置剪切板内容为拖动文件
+		SetClipboardData(CF_HDROP, hGblFiles);
+
+		//可以设置剪切板内容为复制或者剪切标识
+		SetClipboardData(uDropEffect, hGblEffect);
+
+		//关闭剪切板
+		CloseClipboard();
+	}
 }

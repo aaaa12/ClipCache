@@ -36,4 +36,5 @@ private:
 public:
 	afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	void SetTxtExpendModel(int flag);
 };

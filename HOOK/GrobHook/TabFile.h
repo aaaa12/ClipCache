@@ -40,4 +40,8 @@ public:
 	afx_msg void OnSelchangedTree(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	void ExpendPath(HTREEITEM hItem, const vector<CString> &vPath, int p);//展开指定路径
+	afx_msg void OnBnClickedBtnToclip();
+	void SetPathCtl();
+	CString GetPathCtl();
+	void DirIntoClipBoard(CString sDir);
 };

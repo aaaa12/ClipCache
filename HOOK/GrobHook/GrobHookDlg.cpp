@@ -14,6 +14,7 @@
 #include<fstream>
 #include<iterator>
 #include "TabMain.h"
+#include "SetDlg.h"
 #include "KMHookDll.h"
 using namespace std;
 #ifdef _DEBUG
@@ -51,6 +52,9 @@ BEGIN_MESSAGE_MAP(CGrobHookDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &CGrobHookDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &CGrobHookDlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BTN_TABTEST, &CGrobHookDlg::OnBnClickedBtnTabtest)
+	ON_BN_CLICKED(IDC_BUTTON_COPY, &CGrobHookDlg::OnBnClickedButtonCopy)
+	ON_BN_CLICKED(IDC_BUTTON_PASTE, &CGrobHookDlg::OnBnClickedButtonPaste)
+	ON_BN_CLICKED(IDC_BTN_SET, &CGrobHookDlg::OnBnClickedBtnSet)
 END_MESSAGE_MAP()
 
 
@@ -77,7 +81,7 @@ BOOL CGrobHookDlg::OnInitDialog()
 	SetHook(m_hWnd, g_hKeyBoard, g_hMouse);
 	ShowLog("运行中..");
 	CString str;
-	::GetPrivateProfileString("RADIO", "OutPutModel", 
+	::GetPrivateProfileString("RADIO", "OutPutModel",
 		CString("NULL"), str.GetBuffer(MAX_PATH), MAX_PATH, "setting.ini");
 
 	m_iMod = atoi(str.GetBuffer());
@@ -196,7 +200,7 @@ vector<string> split(string str, string pattern)
 string UpperCase(string &str)
 {
 	int off = 'A' - 'a';
-	for (int i=0;i<str.size();i++)
+	for (int i = 0; i < str.size(); i++)
 	{
 		if ('a' <= str[i] && str[i] <= 'z')
 		{
@@ -250,21 +254,21 @@ LRESULT CGrobHookDlg::OnSendText2Win(WPARAM wParam, LPARAM lParam)
 		}
 		else if (HOOK_CMD_SUBMIT == lParam)
 		{
-			
+
 			if ('-' == value[0])
 			{
 				//拆
 				stmp.Format("执行:%s", value.c_str());
 				ShowLog(stmp);
-				vector<string> v= split(value," ");
+				vector<string> v = split(value, " ");
 				if ("-SAVE" == UpperCase(v[0]) && "CLIP" == UpperCase(v[1]))//-SAVE CLIP [filepath]
 				{
 					stmp.Format("%s.txt", v[2].c_str());
-					SaveStrToFile(stmp,GetClipBoradText());
+					SaveStrToFile(stmp, GetClipBoradText());
 					ShowLog("执行完成");
 					m_pMsgDlg->SetTxt("111111111111111111", true);
 				}
-				else 
+				else
 				{
 					ShowLog("解析失败");
 					m_pMsgDlg->SetTxt("000000000000000000", true);
@@ -275,22 +279,22 @@ LRESULT CGrobHookDlg::OnSendText2Win(WPARAM wParam, LPARAM lParam)
 			{
 				CString fileName;
 				fileName.Format("%s.txt", value.c_str());
-		
+
 				while (GetAsyncKeyState(18)) {};//wait for alt up
 				bool ret;
 				if (1 == m_iMod)
-					ret=TypeTextFile(fileName);
-				else if(2== m_iMod )
+					ret = TypeTextFile(fileName);
+				else if (2 == m_iMod)
 					ret = OutPutFile(fileName);
-				else if(3== m_iMod )
+				else if (3 == m_iMod)
 					ret = FileToClip(fileName);
 
-			   if(ret)
-				   m_pMsgDlg->SetTxt("111111111111111111", true);
-			   else
-				   m_pMsgDlg->SetTxt("000000000000000000", true);
+				if (ret)
+					m_pMsgDlg->SetTxt("111111111111111111", true);
+				else
+					m_pMsgDlg->SetTxt("000000000000000000", true);
 
-	
+
 			}
 			AnysSleep(1000);
 			m_pMsgDlg->SetTxt("", false);
@@ -308,7 +312,7 @@ LRESULT CGrobHookDlg::OnSendLog(WPARAM wParam, LPARAM lParam)
 	{
 		char *c = (char *)lParam;
 		CString str;
-		str.Format("%s",c);
+		str.Format("%s", c);
 		ShowLog(str);
 	}
 
@@ -422,7 +426,7 @@ void CGrobHookDlg::TypeStr(CString str)//cstring 一个单位4字节
 
 	int key;
 	CString msg;
-	
+
 
 
 	for (int i = 0; i < str.GetLength(); i++)
@@ -457,7 +461,7 @@ void CGrobHookDlg::TypeStr(CString str)//cstring 一个单位4字节
 
 string CGrobHookDlg::TrimStr(string s)
 {
-	string ret=s;
+	string ret = s;
 	if (!ret.empty())
 	{
 		ret.erase(0, ret.find_first_not_of(" "));
@@ -490,16 +494,16 @@ void CGrobHookDlg::TypeKeyBackSpace(int times)
 	}
 }
 
-void CGrobHookDlg::TypeKeyEnter(string proLine,int &sNum,int &tNum)
+void CGrobHookDlg::TypeKeyEnter(string proLine, int &sNum, int &tNum)
 {
 
 
 	/*string strim=TrimStr(proLine);
 	if(strim !="")*/
-		SpaceAndTabNum(proLine, sNum, tNum);//前几行有tab，回车会自动对齐，所以回车后要先删除自动对齐加的tab
-	
-	//keybd_event(VK_RETURN, 0, 0, 0);
-	//keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+	SpaceAndTabNum(proLine, sNum, tNum);//前几行有tab，回车会自动对齐，所以回车后要先删除自动对齐加的tab
+
+//keybd_event(VK_RETURN, 0, 0, 0);
+//keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
 	for (int i = 0; i < tNum; i++)
 	{
 		Sleep(WaitTime);
@@ -618,7 +622,7 @@ bool CGrobHookDlg::OutPutFile(CString path)
 			}
 
 			free(buf); //最后记得要释放
-		} 
+		}
 	}
 	return true;
 }
@@ -639,7 +643,7 @@ bool CGrobHookDlg::FileToClip(CString path)
 	};
 
 	fseek(pf, 0, SEEK_END);
-	
+
 	if (OpenClipboard())
 	{
 		filelen = ftell(pf);
@@ -686,7 +690,7 @@ CString CGrobHookDlg::GetClipBoradText()
 		if (0 == hData)
 			return "";
 		char * buffer = (char*)GlobalLock(hData);
-		fromClipboard.Format("%s",buffer);
+		fromClipboard.Format("%s", buffer);
 		GlobalUnlock(hData);
 		CloseClipboard();
 	}
@@ -707,8 +711,8 @@ void CGrobHookDlg::ShowLog(CString str)
 
 	fileName.Format("log/%4d-%02d-%02d_log.txt", sys.wYear, sys.wMonth, sys.wDay);
 	logTime.Format("[%4d/%02d/%02d %02d:%02d:%02d]:", sys.wYear, sys.wMonth, sys.wDay, sys.wHour, sys.wMinute, sys.wSecond);
-	
-	sLog[(iLogPos++) % 10] = logTime+str;
+
+	sLog[(iLogPos++) % 10] = logTime + str;
 
 	Invalidate(true);
 
@@ -742,7 +746,7 @@ void CGrobHookDlg::OnBnClickedRadio()
 	iOldMod = m_iMod;
 	CString str;
 	str.Format("%d", m_iMod);
-    ::WritePrivateProfileString("RADIO", "OutPutModel", str, "setting.ini");
+	::WritePrivateProfileString("RADIO", "OutPutModel", str, "setting.ini");
 
 	switch (m_iMod) {
 	case 0:
@@ -833,7 +837,7 @@ CString CGrobHookDlg::ReadStrFromFile(CString path)
 
 void CGrobHookDlg::AnysSleep(int iClock)
 {
-	clock_t s=clock();
+	clock_t s = clock();
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
@@ -876,15 +880,38 @@ void CGrobHookDlg::OnBnClickedRecord()
 void CGrobHookDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	
+
 }
 
+vector<CString> SplitCString(CString strSrc, CString strGap)
+{
+	vector<CString> ret;
+	int nPos = strSrc.Find(strGap);
+
+	CString strLeft = "";
+	while (0 <= nPos) {
+		strLeft = strSrc.Left(nPos);
+		if (!strLeft.IsEmpty())
+			ret.push_back(strLeft);
+		strSrc = strSrc.Right(strSrc.GetLength() - nPos - 1);
+		nPos = strSrc.Find(strGap);
+	}
+	if (!strSrc.IsEmpty())
+	{
+		ret.push_back(strSrc);
+	}
+
+	return ret;
+}
 
 void CGrobHookDlg::OnBnClickedButton3()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	CKMHookDll::GetInstance()->InstallHook(true, true, true);
-	
+	vector<CString> v=SplitCString("D:\\test\\collect", "\\");
+
+
+	//CKMHookDll::GetInstance()->InstallHook(true, true, true);
+
 }
 
 
@@ -900,4 +927,155 @@ void CGrobHookDlg::OnBnClickedBtnTabtest()
 	// TODO: 在此添加控件通知处理程序代码
 	TabMain tab;
 	tab.DoModal();
+}
+
+
+void CGrobHookDlg::OnBnClickedButtonCopy()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	//要复制剪切的文档或者文件夹
+	char *lpBuffer = "D:\\Temp";
+	UINT uBufLen = strlen(lpBuffer);
+
+	//true拷贝，false剪切
+	bool bCopy = true;
+
+	UINT uDropEffect = 0;
+	DROPFILES dropFiles = { 0 };
+	UINT uGblLen = 0;
+	UINT uDropFilesLen = 0;
+	HGLOBAL hGblFiles;
+	HGLOBAL hGblEffect;
+	char * szData = NULL;
+	char * szFileList = NULL;
+	DWORD * dwDropEffect = NULL;
+
+	///////////////////////////自定义剪切板，用来设置标识（复制还是剪切）/////////////////////////
+
+	uDropEffect = RegisterClipboardFormat("Preferred DropEffect");    //参数随便填
+
+	hGblEffect = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, sizeof(DWORD));
+	dwDropEffect = (DWORD*)GlobalLock(hGblEffect);
+
+	//设置自定义剪切板的内容为复制或者剪切标识
+	if (bCopy)
+	{
+		*dwDropEffect = DROPEFFECT_COPY;
+	}
+	else
+	{
+		*dwDropEffect = DROPEFFECT_MOVE;
+	}
+
+	GlobalUnlock(hGblEffect);
+
+	///////////////////////////文件剪切板,用来存放文件列表/////////////////////////    
+
+	uDropFilesLen = sizeof(DROPFILES);
+	//DROPFILES结构的大小
+	dropFiles.pFiles = uDropFilesLen;
+	dropFiles.pt.x = 0;
+	dropFiles.pt.y = 0;
+	dropFiles.fNC = FALSE;
+	//true: UNICODE, false: ascii
+	dropFiles.fWide = TRUE;
+
+	//uBufLen * 2表示的是宽字符大小， 加8表示文件末尾需要2个空指针结尾，每个指针占4个字节大小
+	uGblLen = uDropFilesLen + uBufLen * 2 + 8;
+	hGblFiles = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, uGblLen);
+
+	szData = (char *)GlobalLock(hGblFiles);
+
+	//把DROPFILES结构大小的内容放到szData剪切板空间的最开始
+	memcpy(szData, (LPVOID)(&dropFiles), uDropFilesLen);
+
+	
+
+	//szFileList指向需要放入文件的那个空间，前面存放了DROPFILES结构大小的空间
+	szFileList = szData + uDropFilesLen;
+	
+	//把文件列表转为宽字符，并存放到szFileList指向的那片空间
+	MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
+		lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
+	CString str = szFileList;
+	GlobalUnlock(hGblFiles);
+
+	if (::OpenClipboard(NULL))
+	{
+		EmptyClipboard();
+
+		//可以设置剪切板内容为拖动文件
+		SetClipboardData(CF_HDROP, hGblFiles);
+
+		//可以设置剪切板内容为复制或者剪切标识
+		SetClipboardData(uDropEffect, hGblEffect);
+
+		//关闭剪切板
+		CloseClipboard();
+	}
+}
+
+
+void CGrobHookDlg::OnBnClickedButtonPaste()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	UINT uDropEffect = RegisterClipboardFormat("Preferred DropEffect");
+	UINT cFiles = 0;
+	DWORD dwEffect = 0;
+	DWORD * dw = NULL;
+
+	if (::OpenClipboard(this->m_hWnd))
+	{
+		//获取CF_HDROP剪切板的内容
+		HDROP hDrop = HDROP(GetClipboardData(CF_HDROP));
+
+		//判断文件夹剪切板是否存在，如果存在,在判断自定义剪切板格式是否存在
+		//如果自定义剪切板格式存在，则判断是复制操作还是剪切操作
+		if (hDrop)
+		{
+			//获取自定义剪切板的内容
+			dw = (DWORD*)(GetClipboardData(uDropEffect));
+
+			if (dw == NULL)
+			{
+				dwEffect = DROPEFFECT_COPY;
+			}
+			else
+			{
+				dwEffect = *dw;
+			}
+
+			//查询获取到的文件或文档
+			cFiles = DragQueryFile(hDrop, (UINT)-1, NULL, 0);
+			char szFile[MAX_PATH] = { '\0' };
+			char lpBuffer[MAX_PATH] = { '\0' };
+
+			//查询所有的文件列表，并把路径显示到文本框中
+			for (UINT count = 0; count < cFiles; count++)
+			{
+				DragQueryFile(hDrop, count, szFile, sizeof(szFile));
+
+				lstrcat(lpBuffer, szFile);
+				lstrcat(lpBuffer, "\r\n");
+
+				//把文件显示到文本框
+				//SetDlgItemText(IDC_EDIT_DISPLAY, lpBuffer);
+			}
+		}
+
+		CloseClipboard();
+	}
+
+	if (cFiles == 0)
+	{
+		return;
+	}
+}
+
+
+void CGrobHookDlg::OnBnClickedBtnSet()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	SetDlg dlg;
+	dlg.DoModal();
 }
