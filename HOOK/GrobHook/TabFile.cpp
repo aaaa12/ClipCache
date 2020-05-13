@@ -262,8 +262,8 @@ void TabFile::OnSize(UINT nType, int cx, int cy)
 void TabFile::OnBnClickedBtnToclip()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	DirIntoClipBoard(GetPathCtl());
-
+	//DirIntoClipBoard(GetPathCtl());
+	this->GetParent()->GetParent()->ShowWindow(SW_HIDE);
 }
 
 void TabFile::SetPathCtl()
@@ -382,9 +382,7 @@ void TabFile::OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult)
 	// TODO: 在此添加控件通知处理程序代码
 	HTREEITEM hSelectItem = m_tree.GetSelectedItem();
 
-
 	CString sFullName = tool->GetPathFromTree(hSelectItem, &m_tree);
-	MessageBox(sFullName);
 	if (sFullName.Find(".") != -1)
 	{
 		MessageBox("非文件夹");
@@ -392,13 +390,7 @@ void TabFile::OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 	
 	DirIntoClipBoard(sFullName);
-
-
-
-
-	this->GetParent()->GetParent()->SendMessage(WM_CLOSE);
-
-
+	this->GetParent()->GetParent()->ShowWindow(SW_HIDE);
 
 	*pResult = 0;
 }

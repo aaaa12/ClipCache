@@ -68,15 +68,43 @@ LRESULT CALLBACK MouseProc(
 }
 
 
-
+WPARAM lastUpParam;
+WPARAM lastDownParam;
 LRESULT CALLBACK KeyBoardProc(
 	int nCode, WPARAM wParam, LPARAM lParam)
 {
 	//
-	if (lParam & 0x80000000)//31判断按下还是弹起，这里只处理按下
+	if (lParam & 0x80000000)//这里只处理弹起
 	{
+		lastDownParam = -1;
+		//ctrl+c 起的时候后存一下文本内容
+	    //&& GetAsyncKeyState(VK_MENU) < 0 就是alt
+		//会多次调用这样限制一下
+		if (wParam == 'C'&& lastUpParam != wParam && GetAsyncKeyState(VK_CONTROL) & 0x8000)
+		{
+			lastUpParam = wParam;
+			PostMessage(g_hWnd, WM_USER_SAVECLIP, 0, 0);
+		}
+		
 		return CallNextHookEx(g_hKeyBoard, nCode, wParam, lParam);
 	}
+	else//31判断按下还是弹起，这里只处理按下
+	{
+		lastUpParam = -1;
+
+		if (wParam == 'Q' && lastDownParam != wParam
+			&& GetAsyncKeyState(VK_CONTROL) & 0x8000 
+			&& GetAsyncKeyState(VK_MENU) & 0x8000)
+		{
+			lastDownParam = wParam;
+			PostMessage(g_hWnd, WM_USER_SHOWTAB, 0, 0);
+		}
+
+		return CallNextHookEx(g_hKeyBoard, nCode, wParam, lParam);
+	}
+
+	return  CallNextHookEx(g_hKeyBoard, nCode, wParam, lParam);
+	
 
 	//每次键盘事件更新当前输入的句柄，只有在这才能正确获取当前句柄，因为调用该函数是当前进程
 	g_hFocusWnd = GetFocus();

@@ -5,6 +5,7 @@
 #pragma once
 #include "MsgDlg.h"
 #include "HookDll.h"
+#include "TabMain.h"
 
 // CGrobHookDlg 对话框
 class CGrobHookDlg : public CDialogEx
@@ -48,7 +49,7 @@ private:
 	CMsgDlg* m_pMsgDlg;
 	HHOOK g_hKeyBoard;
 	HHOOK g_hMouse;
-
+	TabMain *tab = NULL;
 	//out put
 	void TypeStr(CString str);
 	bool TypeTextFile(CString path);
@@ -76,6 +77,8 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg LRESULT OnSendText2Win(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT OnSendLog(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSaveClip(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnShowTab(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnHook();

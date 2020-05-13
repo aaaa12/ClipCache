@@ -11,6 +11,8 @@ using namespace std;
 
 #define WM_SEND_TEXT2WIN (WM_USER+1)
 #define WM_SEND_LOG (WM_USER+2)
+#define WM_USER_SAVECLIP (WM_USER+3)
+#define WM_USER_SHOWTAB (WM_USER+4)
 #define HOOK_CMD_CLEAR 0x0001
 #define HOOK_CMD_SUBMIT 0x0002
 #define HOOK_CMD_SHOW 0x0003

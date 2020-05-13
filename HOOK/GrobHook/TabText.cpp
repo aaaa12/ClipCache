@@ -173,23 +173,23 @@ void TabText::OnSelchangedTree(NMHDR *pNMHDR, LRESULT *pResult)
 void TabText::OnBnClickedBtnOk()
 {
 	// TODO: 在此添加控件通知处理程序代码
-
-	CString source = ReadStrFromFile(GetTreePath());
-	//put your text in source 
-	if (OpenClipboard())
-	{
-		HGLOBAL clipbuffer;
-		char * buffer;
-		EmptyClipboard();
-		char* src = source.GetBuffer();
-		int a = strlen(src) + 1;
-		clipbuffer = GlobalAlloc(GMEM_DDESHARE, a);
-		buffer = (char*)GlobalLock(clipbuffer);
-		strcpy(buffer, src);
-		GlobalUnlock(clipbuffer);
-		SetClipboardData(CF_TEXT, clipbuffer);
-		CloseClipboard();
-	}
+	this->GetParent()->GetParent()->ShowWindow(SW_HIDE);
+	//CString source = ReadStrFromFile(GetTreePath());
+	////put your text in source 
+	//if (OpenClipboard())
+	//{
+	//	HGLOBAL clipbuffer;
+	//	char * buffer;
+	//	EmptyClipboard();
+	//	char* src = source.GetBuffer();
+	//	int a = strlen(src) + 1;
+	//	clipbuffer = GlobalAlloc(GMEM_DDESHARE, a);
+	//	buffer = (char*)GlobalLock(clipbuffer);
+	//	strcpy(buffer, src);
+	//	GlobalUnlock(clipbuffer);
+	//	SetClipboardData(CF_TEXT, clipbuffer);
+	//	CloseClipboard();
+	//}
 
 }
 BOOL TabText::OnInitDialog()
@@ -421,6 +421,6 @@ void TabText::OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult)
 		SetClipboardData(CF_TEXT, clipbuffer);
 		CloseClipboard();
 	}
-	this->GetParent()->GetParent()->SendMessage(WM_CLOSE);
+	this->GetParent()->GetParent()->ShowWindow(SW_HIDE);
 	*pResult = 0;
 }

@@ -34,7 +34,6 @@ void CTool::AddSubDirToTree(HTREEITEM hParent,CTreeCtrl *tree, CImageList *image
 	strPath += "*.*";
 	CFileFind file;
 	BOOL bContinue = file.FindFile(strPath);    //查找包含字符串的文件
-
 	while (bContinue)
 	{
 		bContinue = file.FindNextFile();        //查找下一个文件

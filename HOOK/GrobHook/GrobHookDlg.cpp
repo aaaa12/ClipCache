@@ -13,7 +13,7 @@
 #include<vector>
 #include<fstream>
 #include<iterator>
-#include "TabMain.h"
+
 #include "SetDlg.h"
 #include "KMHookDll.h"
 using namespace std;
@@ -39,8 +39,10 @@ void CGrobHookDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CGrobHookDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_MESSAGE(WM_SEND_TEXT2WIN, OnSendText2Win)
-	ON_MESSAGE(WM_SEND_LOG, OnSendLog)
+	ON_MESSAGE(WM_SEND_TEXT2WIN, &CGrobHookDlg::OnSendText2Win)
+	ON_MESSAGE(WM_SEND_LOG, &CGrobHookDlg::OnSendLog)
+	ON_MESSAGE(WM_USER_SAVECLIP, &CGrobHookDlg::OnSaveClip)
+	ON_MESSAGE(WM_USER_SHOWTAB, &CGrobHookDlg::OnShowTab)
 	ON_BN_CLICKED(IDC_BTN_HOOK, &CGrobHookDlg::OnBnClickedBtnHook)
 	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDOK, &CGrobHookDlg::OnBnClickedOk)
@@ -921,14 +923,11 @@ void CGrobHookDlg::OnBnClickedButton4()
 	CKMHookDll::GetInstance()->RunScript();
 }
 
-
 void CGrobHookDlg::OnBnClickedBtnTabtest()
 {
 	// TODO: 在此添加控件通知处理程序代码
-	TabMain tab;
-	tab.DoModal();
+	OnShowTab(0, 0);
 }
-
 
 void CGrobHookDlg::OnBnClickedButtonCopy()
 {
@@ -1015,7 +1014,6 @@ void CGrobHookDlg::OnBnClickedButtonCopy()
 	}
 }
 
-
 void CGrobHookDlg::OnBnClickedButtonPaste()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -1072,10 +1070,70 @@ void CGrobHookDlg::OnBnClickedButtonPaste()
 	}
 }
 
-
 void CGrobHookDlg::OnBnClickedBtnSet()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	SetDlg dlg;
 	dlg.DoModal();
+}
+
+void clearStr(CString &str,CString moveChar)
+{
+	for (int i = 0; i < moveChar.GetLength(); i++)
+	{
+		CString ch;
+		ch.Format("%c", moveChar[i]);
+		str.Replace(ch,"");
+	}
+
+}
+
+LRESULT CGrobHookDlg::OnSaveClip(WPARAM wParam, LPARAM lParam)
+{
+	//Sleep(300);
+	CString sTmpDir;
+	GetPrivateProfileString("Set", "TempPath",
+		CString("NULL"), sTmpDir.GetBuffer(MAX_PATH), MAX_PATH, "setting.ini");
+	SetDlgItemText(IDC_EDIT_TEMP, sTmpDir);
+	sTmpDir.ReleaseBuffer();
+
+	CString txt=GetClipBoradText();
+
+	CString brief = txt.Left(20);//展示20个字符
+	clearStr(brief, "<>/\\|:\"\*?	");
+
+	time_t rawtime;
+	struct tm *ptminfo;
+	time(&rawtime);
+	ptminfo = localtime(&rawtime);
+	long y = ptminfo->tm_year + 1900;
+	long m = ptminfo->tm_mon + 1;
+	long d = ptminfo->tm_mday;
+	long h = ptminfo->tm_hour;
+	long mi = ptminfo->tm_min;
+	long s = ptminfo->tm_sec;
+
+	long kk = ((( m * 30 + d) * 12 + h) * 60 + mi) * 60 + s;
+	kk = 99999999 - kk;
+	CString fileName;
+	fileName.Format("%d[%s].txt", kk, brief);
+
+	//MessageBox(fileName);
+	SaveStrToFile(sTmpDir + "\\" + fileName, txt);
+	return 0;
+}
+
+LRESULT CGrobHookDlg::OnShowTab(WPARAM wParam, LPARAM lParam)
+{
+	if (NULL == tab)
+	{
+		CWnd* pDesktopWnd = CWnd::GetDesktopWindow();
+		// 创建非模态对话框实例   
+		tab = new TabMain();
+		tab->Create(IDD_TABDLG_MAIN, pDesktopWnd);
+	}
+	tab->ShowWindow(SW_SHOWNORMAL);
+	::SetWindowPos(tab->m_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+	return 0;
 }
