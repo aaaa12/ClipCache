@@ -6,7 +6,6 @@
 #define IDR_MAINFRAME                   128
 #define IDD_MSG                         129
 #define IDD_TABDLG_MAIN                 131
-#define IDD_TABDLG_HISTROY              132
 #define IDD_TABDLG_TXT                  133
 #define IDD_TABDLG_FILE                 134
 #define IDI_ICON1                       139
@@ -34,7 +33,6 @@
 #define IDC_BTN_SET                     1024
 #define IDC_EDIT_FILE                   1025
 #define IDC_BTN_OK                      1026
-#define IDC_EDIT2                       1027
 #define IDC_EDT_TEXT                    1028
 
 // Next default values for new objects

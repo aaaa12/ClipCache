@@ -34,6 +34,7 @@ BEGIN_MESSAGE_MAP(TabFile, CDialogEx)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TREE, &TabFile::OnSelchangedTree)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BTN_TOCLIP, &TabFile::OnBnClickedBtnToclip)
+	ON_NOTIFY(NM_DBLCLK, IDC_TREE, &TabFile::OnNMDblclkTree)
 END_MESSAGE_MAP()
 
 
@@ -65,21 +66,25 @@ BOOL TabFile::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	// TODO:  在此添加额外的初始化
-	m_ImageList.Create(32, 32, ILC_COLOR32, 10, 30);     //创建图像序列CImageList对象 
-	//HICON hIcon = theApp.LoadIcon(IDI_ICON1);        //图标句柄
-	//m_ImageList.Add(hIcon);                          //图标添加到图像序列
-	m_list.SetImageList(&m_ImageList, LVSIL_NORMAL);  //为树形控件设置图像序列   
-	m_tree.ModifyStyle(NULL, TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS);
-	m_hRoot = m_tree.InsertItem("我的电脑");         //插入根节点
-	GetLogicalDrives(m_hRoot);                       //自定义函数 获取驱动
-	GetDriveDir(m_hRoot);                            //自定义函数 获取驱动子项
-	m_tree.Expand(m_hRoot, TVE_EXPAND);               //展开或折叠子项列表 TVE_EXPAND展开列表  
+	tool = CTool::get_instance();
 
-	vector<CString> v;
-	v.push_back("D:");
-	v.push_back("EFS");
-	HTREEITEM hChildItem = m_tree.GetNextItem(m_hRoot, TVGN_CHILD);
-	ExpendPath(hChildItem, v, 0);
+	m_ImageList.Create(16, 16, ILC_COLOR32, 10, 30);     //创建图像序列CImageList对象 
+	m_TreeImageList.Create(16, 16, ILC_COLOR32|ILC_MASK, 10, 30);
+	HICON hIcon = theApp.LoadIcon(IDI_ICON1);        //图标句柄
+	m_ImageList.Add(hIcon);                          //图标添加到图像序列
+	m_list.SetImageList(&m_ImageList, LVSIL_SMALL);  //为树形控件设置图像序列LVSIL_SMALL给iconsmall用   
+	m_tree.SetImageList(&m_TreeImageList, LVSIL_NORMAL);
+	m_tree.ModifyStyle(NULL, TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS);
+	//m_hRoot = m_tree.InsertItem("我的电脑");         //插入根节点
+	//GetLogicalDrives(m_hRoot);                       //自定义函数 获取驱动
+	//GetDriveDir(m_hRoot);                            //自定义函数 获取驱动子项
+	//m_tree.Expand(m_hRoot, TVE_EXPAND);               //展开或折叠子项列表 TVE_EXPAND展开列表  
+
+	//vector<CString> v;
+	//v.push_back("D:");
+	//v.push_back("EFS");
+	//HTREEITEM hChildItem = m_tree.GetNextItem(m_hRoot, TVGN_CHILD);
+	//ExpendPath(hChildItem, v, 0);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
@@ -139,12 +144,12 @@ void TabFile::OnItemexpandedTree(NMHDR *pNMHDR, LRESULT *pResult)
 
 	// TODO: 在此添加控件通知处理程序代码
 	TVITEM item = pNMTreeView->itemNew;                  //发送\接受关于树形视图项目信息
-	if (item.hItem == m_hRoot)
-		return;
+	//if (item.hItem == m_hRoot)
+		//return;
 	HTREEITEM hChild = m_tree.GetChildItem(item.hItem);  //获取指定位置中的子项
 	while (hChild)
 	{
-		AddSubDir(hChild);                               //添加子目录
+		tool->AddSubDirToTree(hChild, &m_tree, &m_TreeImageList);                               //添加子目录
 		hChild = m_tree.GetNextItem(hChild, TVGN_NEXT);   //获取树形控件TVGN_NEXT下兄弟项
 	}
 	*pResult = 0;
@@ -195,22 +200,21 @@ void TabFile::OnSelchangedTree(NMHDR *pNMHDR, LRESULT *pResult)
 	// TODO: 在此添加控件通知处理程序代码
 	m_list.DeleteAllItems();
 	NM_TREEVIEW* pNMTreeView = (NM_TREEVIEW*)pNMHDR;
-	TVITEM item = pNMTreeView->itemNew;
-	if (item.hItem == m_hRoot)
-		return;
-	CString str = GetFullPath(item.hItem);
-	if (str.Right(1) != "\\")
-		str += "\\";
-	str += "*.*";
+
+	HTREEITEM hSelectItem = m_tree.GetSelectedItem();
+	CString sFullName = tool->GetPathFromTree(hSelectItem, &m_tree);
+	SetDlgItemText(IDC_EDT_PATH, sFullName);
+	sFullName += "\\*.*";
+
 	CFileFind file;
-	BOOL bContinue = file.FindFile(str);
+	BOOL bContinue = file.FindFile(sFullName);
 	while (bContinue)
 	{
 		bContinue = file.FindNextFile();
 		if (/*!file.IsDirectory() && */!file.IsDots())
 		{
 			SHFILEINFO info;
-			CString temp = str;
+			CString temp = sFullName;
 			int index = temp.Find("*.*");
 			temp.Delete(index, 3);
 			SHGetFileInfo(temp + file.GetFileName(), 0, &info, sizeof(&info), SHGFI_DISPLAYNAME | SHGFI_ICON);
@@ -219,7 +223,7 @@ void TabFile::OnSelchangedTree(NMHDR *pNMHDR, LRESULT *pResult)
 		}
 	}
 
-	SetPathCtl();
+	//SetPathCtl();
 
 	*pResult = 0;
 }
@@ -371,4 +375,43 @@ void TabFile::DirIntoClipBoard(CString sDir)
 		//关闭剪切板
 		CloseClipboard();
 	}
+}
+
+void TabFile::OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// TODO: 在此添加控件通知处理程序代码
+	HTREEITEM hSelectItem = m_tree.GetSelectedItem();
+
+
+	CString sFullName = tool->GetPathFromTree(hSelectItem, &m_tree);
+	MessageBox(sFullName);
+	if (sFullName.Find(".") != -1)
+	{
+		MessageBox("非文件夹");
+		return;
+	}
+	
+	DirIntoClipBoard(sFullName);
+
+
+
+
+	this->GetParent()->GetParent()->SendMessage(WM_CLOSE);
+
+
+
+	*pResult = 0;
+}
+
+void TabFile::InitFileTree()
+{
+
+	CString sDir;
+    GetPrivateProfileString("Set", "FilePath",
+		CString("NULL"), sDir.GetBuffer(MAX_PATH), MAX_PATH, "setting.ini");
+	
+	sDir.ReleaseBuffer();
+	tool->BuildTree(sDir, &m_tree,&m_TreeImageList);
+
+
 }

@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "TabHistroy.h"
 #include "TabText.h"
 #include "TabFile.h"
 
@@ -24,7 +23,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 private:
-	TabHistroy m_tabHist;
 	TabFile m_tabFile;
 	TabText m_tabText;
 	void SetCtlRect();
@@ -33,6 +31,7 @@ public:
 	virtual BOOL OnInitDialog();
 private:
 	CTabCtrl m_tab;
+	void SwitchTab(int iCode);
 public:
 	afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSize(UINT nType, int cx, int cy);

@@ -47,15 +47,12 @@ BOOL TabMain::OnInitDialog()
 	m_tabFile.Create(IDD_TABDLG_FILE, GetDlgItem(IDC_TAB));
 	m_tabText.Create(IDD_TABDLG_TXT, GetDlgItem(IDC_TAB));
 
-	m_tab.InsertItem(0, "历史Txt");
-	m_tab.InsertItem(1, "文件");
-	m_tab.InsertItem(2, "文本");
-	m_tab.SetCurSel(0);
+	m_tab.InsertItem(0, "文件");
+	m_tab.InsertItem(1, "历史文本");
+	m_tab.InsertItem(2, "收藏文本");
+	m_tab.SetCurSel(2);
+	SwitchTab(2);
 
-	//分别设置隐藏和显示 
-	//m_tabHist.ShowWindow(true);
-	//m_tabFile.ShowWindow(false);
-	//m_tabText.ShowWindow(false);
 	bResize = true;
 	SetCtlRect();
 	
@@ -63,26 +60,21 @@ BOOL TabMain::OnInitDialog()
 				  // 异常: OCX 属性页应返回 FALSE
 }
 
-
-void TabMain::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
+void TabMain::SwitchTab(int iCode)
 {
-	// TODO: 在此添加控件通知处理程序代码
-	int CurSel = m_tab.GetCurSel();
-	switch (CurSel)
+	switch (iCode)
 	{
 	case 0:
-		//m_tabHist.ShowWindow(true);
+		m_tabFile.ShowWindow(true);
+		m_tabText.ShowWindow(false);
+		m_tabFile.InitFileTree();
+		break;
+	case 1:
 		m_tabFile.ShowWindow(false);
 		m_tabText.ShowWindow(true);
 		m_tabText.SetExpendModel(EXPEND_HISTROY);
 		break;
-	case 1:
-		//m_tabHist.ShowWindow(false);
-		m_tabFile.ShowWindow(true);
-		m_tabText.ShowWindow(false);
-		break;
 	case 2:
-		//m_tabHist.ShowWindow(false);
 		m_tabFile.ShowWindow(false);
 		m_tabText.ShowWindow(true);
 		m_tabText.SetExpendModel(EXPEND_COLLECT);
@@ -90,8 +82,12 @@ void TabMain::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	default:
 		;
 	}
+}
 
-
+void TabMain::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// TODO: 在此添加控件通知处理程序代码
+	SwitchTab(m_tab.GetCurSel());
 	*pResult = 0;
 }
 
@@ -121,7 +117,6 @@ void TabMain::SetCtlRect()
 	rc.right -= 2;
 
 	////设置子对话框尺寸并移动到指定位置 
-	//m_tabHist.MoveWindow(&rc);
 	m_tabFile.MoveWindow(&rc);
 	m_tabText.MoveWindow(&rc);
 
@@ -129,5 +124,5 @@ void TabMain::SetCtlRect()
 
 void TabMain::SetTxtExpendModel(int flag)
 {
-	m_tabText.SetExpendModel(flag);
+	SwitchTab(flag);
 }

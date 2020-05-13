@@ -25,9 +25,11 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 public:
+	CTool *tool;
 	CListCtrl m_list;        //列表控件 IDC_LIST
 	CTreeCtrl m_tree;        //树形控件 IDC_TREE
 	CImageList m_ImageList;  //图像列表(相同大小图像集合) 
+	CImageList m_TreeImageList;  //图像列表(相同大小图像集合) 
 	HTREEITEM m_hRoot;       //句柄 CTreeCtrl的根结点"我的电脑"
 protected:
 
@@ -44,4 +46,6 @@ public:
 	void SetPathCtl();
 	CString GetPathCtl();
 	void DirIntoClipBoard(CString sDir);
+	afx_msg void OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult);
+	void InitFileTree();
 };
