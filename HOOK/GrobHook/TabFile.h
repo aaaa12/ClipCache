@@ -48,4 +48,7 @@ public:
 	void DirIntoClipBoard(CString sDir);
 	afx_msg void OnNMDblclkTree(NMHDR *pNMHDR, LRESULT *pResult);
 	void InitFileTree();
+	int bAllFile;
+	afx_msg void OnBnClickedRadioAll();
+	afx_msg void OnBnClickedRadioContent();
 };

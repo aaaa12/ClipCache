@@ -929,12 +929,65 @@ void CGrobHookDlg::OnBnClickedBtnTabtest()
 	OnShowTab(0, 0);
 }
 
+vector<CString> getFiles(CString strPath, UINT &size)
+{
+	size = 0;
+	vector<CString> vRet;
+	if (strPath.Right(1) != "\\")
+		strPath += "\\";
+	strPath += "*.*";
+	CFileFind file;
+	BOOL bContinue = file.FindFile(strPath);    //查找包含字符串的文件
+	while (bContinue)//不递归
+	{
+		bContinue = file.FindNextFile();        //查找下一个文件
+		if (/*file.IsDirectory() &&*/ !file.IsDots())
+		{
+			size = size+file.GetFilePath().GetLength()+1; //GetLength()未计算尾部/0
+			vRet.push_back(file.GetFilePath());
+		}
+	}
+	size + 1;
+	return vRet;
+}
 void CGrobHookDlg::OnBnClickedButtonCopy()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	//要复制剪切的文档或者文件夹
-	char *lpBuffer = "D:\\Temp";
-	UINT uBufLen = strlen(lpBuffer);
+	//CString sPath = getFiles("D:\\Temp");
+	//MessageBox(sPath);
+    //D:\目录test\A
+	//D : \目录test\B
+	//char lpBuffer[10240];
+	//memset(lpBuffer,0, 10240);
+	//char *lpBuffer = sPath.GetBuffer();
+//csdm: c:\temp1.txt'\0'c:\temp2.txt'\0''\0'
+	//char *a = "D:\\目录test\\A";
+	//char *b = "D:\\目录test\\B";
+	//int lenA = strlen("D:\\目录test\\A") + 1;
+	//int lenB = strlen("D:\\目录test\\B") + 1;
+	//memcpy(lpBuffer, a, lenA);
+	//memcpy(lpBuffer+ lenA, b, lenB);
+	//UINT uBufLen = lenA+ lenB+1;//后面要2个'\0'所以再加1
+//调整自单个文件复制：https://www.cnblogs.com/xydblog/p/3643453.html
+	UINT uBufLen;
+	int lenCurrent;
+	int lenTotal=0;
+	char lpBuffer[10240];
+	memset(lpBuffer, 0, 10240);
+	vector<CString> vFileList= getFiles("D:\\test", uBufLen);
+	if (uBufLen > 10240)
+	{
+		MessageBox("所选文件夹下文件太多！");
+		return;
+	}
+
+	for (int i=0;i< vFileList.size();i++)
+	{
+		lenCurrent = vFileList[i].GetLength()+1;
+		memcpy(lpBuffer + lenTotal, vFileList[i].GetBuffer(), lenCurrent);
+		lenTotal+= lenCurrent;
+	}
 
 	//true拷贝，false剪切
 	bool bCopy = true;
@@ -955,6 +1008,11 @@ void CGrobHookDlg::OnBnClickedButtonCopy()
 
 	hGblEffect = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, sizeof(DWORD));
 	dwDropEffect = (DWORD*)GlobalLock(hGblEffect);
+
+//调用GlobalAlloc函数分配一块内存，该函数会返回分配的内存句柄。
+//调用GlobalLock函数锁定内存块，该函数接受一个内存句柄作为参数，然后返回一个指向被锁定的内存块的指针。 您可以用该指针来读写内存。
+//调用GlobalUnlock函数来解锁先前被锁定的内存，该函数使得指向内存块的指针无效。
+//调用GlobalFree函数来释放内存块。您必须传给该函数一个内存句柄。
 
 	//设置自定义剪切板的内容为复制或者剪切标识
 	if (bCopy)
@@ -977,10 +1035,10 @@ void CGrobHookDlg::OnBnClickedButtonCopy()
 	dropFiles.pt.y = 0;
 	dropFiles.fNC = FALSE;
 	//true: UNICODE, false: ascii
-	dropFiles.fWide = TRUE;
+	dropFiles.fWide = FALSE;
 
-	//uBufLen * 2表示的是宽字符大小， 加8表示文件末尾需要2个空指针结尾，每个指针占4个字节大小
-	uGblLen = uDropFilesLen + uBufLen * 2 + 8;
+
+	uGblLen = uDropFilesLen + uBufLen;
 	hGblFiles = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, uGblLen);
 
 	szData = (char *)GlobalLock(hGblFiles);
@@ -994,9 +1052,11 @@ void CGrobHookDlg::OnBnClickedButtonCopy()
 	szFileList = szData + uDropFilesLen;
 	
 	//把文件列表转为宽字符，并存放到szFileList指向的那片空间
-	MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
-		lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
-	CString str = szFileList;
+	//MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
+	//	lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
+	memcpy(szFileList, lpBuffer, uBufLen);
+	//CString str = szFileList;
+
 	GlobalUnlock(hGblFiles);
 
 	if (::OpenClipboard(NULL))

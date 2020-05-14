@@ -75,25 +75,3 @@ void CTool::BuildTree(CString sDir, CTreeCtrl *tree, CImageList *imageList)
 	tree->Expand(m_hRoot, TVE_EXPAND);               //展开或折叠子项列表 TVE_EXPAND展开列表  
 
 }
-
-vector<CString> CTool::getFiles(CString strPath, UINT &size)
-{
-	size = 0;
-	vector<CString> vRet;
-	if (strPath.Right(1) != "\\")
-		strPath += "\\";
-	strPath += "*.*";
-	CFileFind file;
-	BOOL bContinue = file.FindFile(strPath);    //查找包含字符串的文件
-	while (bContinue)//不递归
-	{
-		bContinue = file.FindNextFile();        //查找下一个文件
-		if (/*file.IsDirectory() &&*/ !file.IsDots())
-		{
-			size = size + file.GetFilePath().GetLength() + 1; //GetLength()未计算尾部/0
-			vRet.push_back(file.GetFilePath());
-		}
-	}
-	size + 1;
-	return vRet;
-}

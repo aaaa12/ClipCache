@@ -13,6 +13,7 @@ IMPLEMENT_DYNAMIC(TabFile, CDialogEx)
 
 TabFile::TabFile(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_TABDLG_FILE, pParent)
+	, bAllFile(0)
 {
 
 }
@@ -26,6 +27,7 @@ void TabFile::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST, m_list);
 	DDX_Control(pDX, IDC_TREE, m_tree);
+	DDX_Radio(pDX, IDC_RADIO_ALL, bAllFile);
 }
 
 
@@ -35,6 +37,8 @@ BEGIN_MESSAGE_MAP(TabFile, CDialogEx)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_BTN_TOCLIP, &TabFile::OnBnClickedBtnToclip)
 	ON_NOTIFY(NM_DBLCLK, IDC_TREE, &TabFile::OnNMDblclkTree)
+	ON_BN_CLICKED(IDC_RADIO_ALL, &TabFile::OnBnClickedRadioAll)
+	ON_BN_CLICKED(IDC_RADIO_CONTENT, &TabFile::OnBnClickedRadioAll)
 END_MESSAGE_MAP()
 
 
@@ -85,6 +89,14 @@ BOOL TabFile::OnInitDialog()
 	//v.push_back("EFS");
 	//HTREEITEM hChildItem = m_tree.GetNextItem(m_hRoot, TVGN_CHILD);
 	//ExpendPath(hChildItem, v, 0);
+	CString str;
+	GetPrivateProfileString("Set_File", "AllFile",
+		CString("NULL"), str.GetBuffer(MAX_PATH), MAX_PATH, "setting.ini");
+	if (str == "0")
+		bAllFile = 0;
+	else
+		bAllFile = 1;
+	UpdateData(false);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // 异常: OCX 属性页应返回 FALSE
@@ -295,9 +307,52 @@ CString TabFile::GetPathCtl()
 
 void TabFile::DirIntoClipBoard(CString sDir)
 {
-	//要复制剪切的文档或者文件夹
-	char *lpBuffer = sDir.GetBuffer();
-	UINT uBufLen = strlen(lpBuffer);
+	//相对路径转绝地路径
+	CString str_url;
+	if (sDir[1] != ':')
+	{
+	TCHAR szFilePath[MAX_PATH + 1] = { 0 };
+	GetModuleFileName(NULL, szFilePath, MAX_PATH);
+	(_tcsrchr(szFilePath, _T('\\')))[1] = 0; // 删除文件名，只获得路径字串
+	str_url = szFilePath;
+	str_url = str_url + sDir;
+	}
+	else
+	{
+		str_url = sDir;
+	}
+
+	//调整自单个文件复制：https://www.cnblogs.com/xydblog/p/3643453.html
+	UINT uBufLen;
+	int lenCurrent;
+	int lenTotal = 0;
+	char lpBuffer[10240];
+	memset(lpBuffer, 0, 10240);
+	vector<CString> vFileList;
+	
+	UpdateData(true);
+	if (bAllFile == 0)
+	{
+		vFileList.push_back(str_url);
+		uBufLen = str_url.GetLength() + 1;
+	}
+	else
+	{
+		vFileList=tool->getFiles(str_url, uBufLen);
+	}
+
+	if (uBufLen > 10240)
+	{
+		MessageBox("所选文件夹下文件太多！");
+		return;
+	}
+
+	for (int i = 0; i < vFileList.size(); i++)
+	{
+		lenCurrent = vFileList[i].GetLength() + 1;
+		memcpy(lpBuffer + lenTotal, vFileList[i].GetBuffer(), lenCurrent);
+		lenTotal += lenCurrent;
+	}
 
 	//true拷贝，false剪切
 	bool bCopy = true;
@@ -319,7 +374,12 @@ void TabFile::DirIntoClipBoard(CString sDir)
 	hGblEffect = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, sizeof(DWORD));
 	dwDropEffect = (DWORD*)GlobalLock(hGblEffect);
 
-	//设置自定义剪切板的内容为复制或者剪切标识
+	//调用GlobalAlloc函数分配一块内存，该函数会返回分配的内存句柄。
+	//调用GlobalLock函数锁定内存块，该函数接受一个内存句柄作为参数，然后返回一个指向被锁定的内存块的指针。 您可以用该指针来读写内存。
+	//调用GlobalUnlock函数来解锁先前被锁定的内存，该函数使得指向内存块的指针无效。
+	//调用GlobalFree函数来释放内存块。您必须传给该函数一个内存句柄。
+
+		//设置自定义剪切板的内容为复制或者剪切标识
 	if (bCopy)
 	{
 		*dwDropEffect = DROPEFFECT_COPY;
@@ -340,10 +400,10 @@ void TabFile::DirIntoClipBoard(CString sDir)
 	dropFiles.pt.y = 0;
 	dropFiles.fNC = FALSE;
 	//true: UNICODE, false: ascii
-	dropFiles.fWide = TRUE;
+	dropFiles.fWide = FALSE;
 
-	//uBufLen * 2表示的是宽字符大小， 加8表示文件末尾需要2个空指针结尾，每个指针占4个字节大小
-	uGblLen = uDropFilesLen + uBufLen * 2 + 8;
+
+	uGblLen = uDropFilesLen + uBufLen;
 	hGblFiles = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE | GMEM_DDESHARE, uGblLen);
 
 	szData = (char *)GlobalLock(hGblFiles);
@@ -357,9 +417,11 @@ void TabFile::DirIntoClipBoard(CString sDir)
 	szFileList = szData + uDropFilesLen;
 
 	//把文件列表转为宽字符，并存放到szFileList指向的那片空间
-	MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
-		lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
-	CString str = szFileList;
+	//MultiByteToWideChar(CP_ACP, MB_COMPOSITE,
+	//	lpBuffer, uBufLen, (WCHAR *)szFileList, uBufLen);
+	memcpy(szFileList, lpBuffer, uBufLen);
+	//CString str = szFileList;
+
 	GlobalUnlock(hGblFiles);
 
 	if (::OpenClipboard(NULL))
@@ -406,4 +468,24 @@ void TabFile::InitFileTree()
 	tool->BuildTree(sDir, &m_tree,&m_TreeImageList);
 
 
+}
+
+void TabFile::OnBnClickedRadioAll()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString str;
+	UpdateData(true);
+	str.Format("%d",bAllFile);
+
+	::WritePrivateProfileString("Set_File", "AllFile", str, "setting.ini");
+}
+
+
+void TabFile::OnBnClickedRadioContent()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	/*CString str;
+	UpdateData(true);
+	str.Format("%d", bAllFile);
+	MessageBox(str);*/
 }

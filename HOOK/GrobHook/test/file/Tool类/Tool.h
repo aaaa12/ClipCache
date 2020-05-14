@@ -1,7 +1,5 @@
 #pragma once
 #include "afxdialogex.h"
-#include<vector>
-using namespace std;
 class CTool
 {
 private:
@@ -23,7 +21,7 @@ public:
 	void BuildTree(CString sDir, CTreeCtrl *tree, CImageList *imageList);
 	CString GetPathFromTree(HTREEITEM hCurrent, CTreeCtrl *tree);
 	void AddSubDirToTree(HTREEITEM hParent, CTreeCtrl *tree, CImageList *imageList);
-	vector<CString> getFiles(CString strPath, UINT &size);
+
 
 };
 
