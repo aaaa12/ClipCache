@@ -3,6 +3,8 @@
 #include "HookDll.h"
 #include "KMHookDll.h"
 
+//改为静态编译需要添加lib
+#pragma comment(lib,"User32.lib")
 
 HHOOK g_hMouse = NULL;
 HHOOK g_hKeyBoard = NULL;
