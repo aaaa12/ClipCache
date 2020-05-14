@@ -1160,8 +1160,7 @@ LRESULT CGrobHookDlg::OnSaveClip(WPARAM wParam, LPARAM lParam)
 	CString txt=GetClipBoradText();
 
 	CString brief = txt.Left(20);//展示20个字符
-	clearStr(brief, "<>/\\|:\"\*?	");
-
+	clearStr(brief, "<>/\\|:\"\*?	\n\r");
 	time_t rawtime;
 	struct tm *ptminfo;
 	time(&rawtime);
